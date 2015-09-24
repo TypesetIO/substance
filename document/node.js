@@ -119,6 +119,43 @@ Node.static.toHtml = function(node, converter) {
   return $el;
 };
 
+Node.static.addConverter = function(nodeConverter) {
+  if (!nodeConverter.static.name) {
+    throw new Error('NodeConverter.name is mandatory.');
+  }
+  var NodeClass = this.__NodeClass__;
+  // such as 'xml' or 'html'
+  var converterName = nodeConverter.static.name;
+  var nodeType = NodeClass.static.name;
+  if (!Object.hasOwnProperty('converters')) {
+    this.converters = {};
+  }
+  this.converters[converterName] = nodeConverter;
+  if (nodeConverter.prototype.alias) {
+    if (_.isString(nodeConverter.prototype.alias)) {
+        this.converters[nodeConverter.prototype.alias] = nodeConverter
+    } else if (_.isArray(nodeConverter.prototype.alias)) {
+      _.each(nodeConverter.prototype.alias, function(alias) {
+        this.converters[alias] = nodeConverter
+      }, this);
+    }
+  }
+};
+
+Node.static.getConverter = function(converterName) {
+  var NodeClass = this.__NodeClass__;
+  var nodeType = NodeClass.static.name;
+  var staticContext = this;
+  while (staticContext) {
+    if (staticContext.converters &&
+        staticContext.converters[converterName]) {
+      return staticContext.converters[converterName];
+    }
+    // iterate through the static contexts of parent classes
+    staticContext = staticContext.prototype;
+  }
+};
+
 Node.static.external = false;
 
 module.exports = Node;

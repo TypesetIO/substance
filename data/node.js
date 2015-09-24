@@ -203,6 +203,7 @@ var initNodeClass = function(NodeClass, proto) {
   defineProperties(NodeClass);
   prepareSchema(NodeClass);
   NodeClass.type = NodeClass.static.name;
+  NodeClass.static.__NodeClass__ = NodeClass;
 };
 
 Node.static.initNodeClass = initNodeClass;
