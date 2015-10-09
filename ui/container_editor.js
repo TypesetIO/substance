@@ -13,16 +13,8 @@ var $$ = Component.$$;
 function ContainerEditor() {
   Surface.apply(this, arguments);
 
-  // this.editor = new ContainerEditor();
-  // this.textPropertyManager = new TextPropertyManager(doc, editor.getContainerId());
   this.editor = new LegacyContainerEditor(this.props.containerId);
   this.textPropertyManager = new TextPropertyManager(this.props.doc, this.props.containerId);
-
-  // if (editor.isContainerEditor()) {
-  //   this.textPropertyManager = new TextPropertyManager(doc, editor.getContainerId());
-  // } else {
-  //   this.textPropertyManager = new TextPropertyManager(doc);
-  // }
 
   this.props.doc.connect(this, {
     'document:changed': this.onDocumentChange
@@ -34,20 +26,6 @@ ContainerEditor.Prototype = function() {
   this.dispose = function() {
     this.props.doc.disconnect(this);
   };
-
-  // this.didMount = function() {
-  //   this.surface.attach(this.$el[0]);
-  // };
-
-  // this.willReceiveProps = function(newProps) {
-  //   if (this.props.doc && this.props.doc !== newProps.doc) {
-  //     this.surface.detach();
-  //   }
-  // };
-
-  // this.didReceiveProps = function() {
-  //   this._initialize();
-  // };
 
   this.render = function() {
     var doc = this.props.doc;

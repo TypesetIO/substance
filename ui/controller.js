@@ -1,7 +1,6 @@
 'use strict';
 
 var OO = require('../basics/oo');
-var Surface = require('./surface/surface');
 var EventEmitter = require('../basics/event_emitter');
 var _ = require('../basics/helpers');
 var Clipboard = require('./surface/clipboard');
@@ -144,10 +143,6 @@ Controller.Prototype = function() {
     if (surface) {
       return surface.getContainerId();  
     }
-  };
-
-  this.createSurface = function(editor, options) {
-    return new Surface(this, editor, options);
   };
 
   this.registerSurface = function(surface) {
