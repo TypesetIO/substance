@@ -11,6 +11,7 @@ var Logger = require ('../basics/logger');
 var Selection = require('../document/selection');
 var defaultCommands = require('./commands');
 
+
 var Controller = function(doc, config) {
   EventEmitter.call(this);
 

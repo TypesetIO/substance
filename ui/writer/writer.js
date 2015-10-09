@@ -58,6 +58,7 @@ Writer.Prototype = function() {
   this._initialize = function(props) {
     var doc = props.doc;
     this.config = props.config || this.config || {};
+    
     // Initialize controller
     this.controller = new Controller(doc, {
       // HACK: until we have moved commands into surface scope

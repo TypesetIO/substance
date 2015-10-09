@@ -1,49 +1,43 @@
 'use strict';
 
-var $ = require('../../basics/jquery');
-var _ = require('../../basics/helpers');
-var OO = require('../../basics/oo');
-var Substance = require('../../basics');
-var SurfaceSelection = require('./surface_selection');
-var Document = require('../../document');
+var $ = require('../basics/jquery');
+var _ = require('../basics/helpers');
+var OO = require('../basics/oo');
+var Substance = require('../basics');
+var SurfaceSelection = require('./surface/surface_selection');
+var Document = require('../document');
 var Selection = Document.Selection;
-var TextPropertyManager = require('../../document/text_property_manager');
-var Registry = require('../../basics/registry');
+var Component = require('./component');
 
-var __id__ = 0;
+var Registry = require('../basics/registry');
 
-function Surface(controller, editor, options) {
-  Substance.EventEmitter.call(this);
+function Surface() {
+  Component.apply(this, arguments);
 
+  var controller = this.context.controller;
+  var doc = this.props.doc;
+  
   if (!controller) {
-    throw new Error('Illegal argument: controller is required. was ' + controller);
+    throw new Error('Surface needs a controller');
   }
 
-  var doc = controller.getDocument();
+  if (!doc) {
+    throw new Error('No doc provided');
+  }
 
-  options = options || {};
-
-  this.__id__ = __id__++;
-  this.name = options.name || this.__id__;
-
+  this.doc = doc;
   this.controller = controller;
-
-  if (editor.isContainerEditor()) {
-    this.textPropertyManager = new TextPropertyManager(doc, editor.getContainerId());
-  } else {
-    this.textPropertyManager = new TextPropertyManager(doc);
-  }
 
   this.selection = Document.nullSelection;
 
   // this.element must be set via surface.attach(element)
   this.element = null;
   this.$element = null;
-  this.editor = editor;
+  // this.editor = editor;
 
   this.surfaceSelection = null;
 
-  this.logger = options.logger || window.console;
+  // this.logger = options.logger || window.console;
 
   this.$ = $;
   this.$window = this.$(window);
@@ -81,21 +75,35 @@ function Surface(controller, editor, options) {
   this.undoEnabled = true;
 
   /*jshint eqnull:true */
-  if (options.undoEnabled != null) {
-    this.undoEnabled = options.undoEnabled;
-  }
-  if (options.contentEditable != null) {
-    this.enableContentEditable = options.contentEditable;
-  } else {
-    this.enableContentEditable = true;
-  }
+  // if (options.undoEnabled != null) {
+  //   this.undoEnabled = options.undoEnabled;
+  // }
+  // if (options.contentEditable != null) {
+  //   this.enableContentEditable = options.contentEditable;
+  // } else {
+  //   this.enableContentEditable = true;
+  // }
 
-  this._initializeCommandRegistry(options.commands);  
-  this.controller.registerSurface(this);
+  this._initializeCommandRegistry(this.props.commands);  
+  controller.registerSurface(this);
   /*jshint eqnull:false */
 }
 
 Surface.Prototype = function() {
+
+  this.didMount = function() {
+    this.attach(this.el);
+  };
+
+  this.dispose = function() {
+    this.detach();
+  };
+
+  this.getChildContext = function() {
+    return {
+      surface: this
+    };
+  };
 
   this._initializeCommandRegistry = function(commands) {
     var commandRegistry = new Registry();
@@ -170,7 +178,7 @@ Surface.Prototype = function() {
   };
 
   this.getDocument = function() {
-    return this.controller.getDocument();
+    return this.props.doc;
   };
 
   this.dispose = function() {
@@ -813,7 +821,7 @@ Surface.Prototype = function() {
   };
 };
 
-OO.inherit(Surface, Substance.EventEmitter);
+OO.inherit(Surface, Component);
 
 Surface.Keys =  {
   UNDEFINED: 0,
