@@ -14,7 +14,8 @@ var Registry = require('../basics/registry');
 function Surface() {
   Component.apply(this, arguments);
 
-  var controller = this.context.controller;
+  // Takes the controller, either via props or dependency injection
+  var controller = this.props.controller || this.context.controller;
   var doc = this.props.doc;
   
   if (!controller) {
@@ -25,6 +26,11 @@ function Surface() {
     throw new Error('No doc provided');
   }
 
+  if (!this.props.name) {
+    throw new Error('No name provided');
+  }
+
+  this.name = this.props.name;
   this.doc = doc;
   this.controller = controller;
 

@@ -17,7 +17,9 @@ function ToolManager(controller) {
   this.controller = controller;
   this.tools = [];
 
-  this.controller.doc.connect(this, {
+  var doc = this.controller.getDocument();
+
+  doc.connect(this, {
     "document:changed": this.updateTools
   }, { priority: -2 });
 
@@ -29,8 +31,9 @@ function ToolManager(controller) {
 ToolManager.Prototype = function() {
 
   this.dispose = function() {
+    var doc = this.controller.getDocument();
     this.controller.disconnect(this);
-    this.doc.disconnect(this);
+    doc.disconnect(this);
   };
 
   this.getCommandState = function(tool) {
@@ -39,7 +42,7 @@ ToolManager.Prototype = function() {
     var surface = this.controller.getFocusedSurface();
     if (surface) {
       var cmd = surface.getCommand(commandName);
-      return DEFAULT_TOOLSTATE;
+      return cmd.getCommandState();
     } else {
       return DEFAULT_TOOLSTATE;  
     }

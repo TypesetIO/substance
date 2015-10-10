@@ -1,11 +1,14 @@
 "use strict";
 
 require('../phantomjs_shims');
-var Surface = require('../../../ui/surface/surface');
-var ContainerEditor = require('../../../ui/surface/container_editor');
+// var Surface = require('../../../ui/surface');
+var ContainerEditor = require('../../../ui/container_editor');
+var Component = require('../../../ui/component');
+var $$ = Component.$$;
 var Controller = require('../../../ui/controller');
 var simple = require('../../fixtures/simple');
 var createAnnotation = require('../../../document/transformations/create_annotation');
+
 
 QUnit.uiModule('Surface');
 
@@ -21,9 +24,15 @@ QUnit.test("Set the selection after creating annotation.", function(assert) {
   var surfaceEl = $('#surface')[0];
   var doc = simple();
   var controller = new Controller(doc, {});
-  var editor = new ContainerEditor('main');
-  var surface = new Surface(controller, editor);
-  surface.attach(surfaceEl);
+
+  var surface = Component.mount($$(ContainerEditor, {
+    doc: doc,
+    controller: controller,
+    containerId: 'main',
+    name: 'main'
+  }), surfaceEl);
+
+  debugger;
 
   surface.setFocused(true);
   var sel = doc.createSelection({
@@ -34,14 +43,14 @@ QUnit.test("Set the selection after creating annotation.", function(assert) {
   });
   surface.setSelection(sel);
   // this should blur the surface which should persist the selection
-  $(surfaceEl).blur();
+  surface.$el.blur();
   surface.transaction(function(tx, args) {
     args.selection = sel;
     args.annotationType = "strong";
     args = createAnnotation(tx, args);
     return args;
   });
-  $(surfaceEl).focus();
+  surface.el.focus();
   var wsel = window.getSelection();
   var newSel = surface.surfaceSelection.getSelection();
   assert.equal(wsel.rangeCount, 1, "There should be a DOM selection.");

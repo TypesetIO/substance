@@ -11,8 +11,8 @@ var expandAnnotation = require('../../document/transformations/expand_annotation
 var truncateAnnotation = require('../../document/transformations/truncate_annotation');
 var deleteAnnotation = require('../../document/transformations/delete_annotation');
 
-var ToggleAnnotationCommand = function(controller) {
-  SurfaceCommand.call(this, controller);
+var ToggleAnnotationCommand = function(surface) {
+  SurfaceCommand.call(this, surface);
 };
 
 ToggleAnnotationCommand.Prototype = function() {

@@ -1,39 +1,36 @@
 'use strict';
 
 var OO = require('../basics/oo');
-var EventEmitter = require('../basics/event_emitter');
 var _ = require('../basics/helpers');
+var Component = require('./component');
+
 var Clipboard = require('./surface/clipboard');
 var ToolManager = require('./tool_manager');
 var Registry = require('../basics/registry');
 var Logger = require ('../basics/logger');
 var Selection = require('../document/selection');
-var defaultCommands = require('./commands');
 
 
-var Controller = function(doc, config) {
-  EventEmitter.call(this);
+function Controller() {
+  Component.apply(this, arguments);
+ 
+  if (!this.props.doc) throw new Error('Controller requires a Substance document instance');
 
-  if (!doc) throw new Error('Controller requires a Substance document instance');
-
-  this.doc = doc;
-  this.config = config;
   this.surfaces = {};
   this.focusedSurface = null;
   this.stack = [];
-
   this.logger = new Logger();
 
   // Initialize registries
-  this._initializeComponentRegistry();
-  this._initializeCommandRegistry();
+  this._initializeComponentRegistry(this.props.config.components);
+  this._initializeCommandRegistry(this.props.config.commands.controller);
 
   // Initialize clipboard
-  this.clipboard = new Clipboard(this, doc.getClipboardImporter(), doc.getClipboardExporter());
+  this.clipboard = new Clipboard(this, this.props.doc.getClipboardImporter(), this.props.doc.getClipboardExporter());
 
   this.toolManager = new ToolManager(this);
 
-  doc.connect(this, {
+  this.props.doc.connect(this, {
     'document:changed': this.onDocumentChanged,
     'transaction:started': this.onTransactionStarted
   }, {
@@ -41,7 +38,7 @@ var Controller = function(doc, config) {
     // when we render the selection
     priority: -10
   });
-};
+}
 
 Controller.Prototype = function() {
 
@@ -49,17 +46,15 @@ Controller.Prototype = function() {
     return this.toolManager;
   };
 
-  this._initializeComponentRegistry = function() {
+  this._initializeComponentRegistry = function(components) {
     var componentRegistry = new Registry();
-    _.each(this.config.components, function(ComponentClass, name) {
+    _.each(components, function(ComponentClass, name) {
       componentRegistry.add(name, ComponentClass);
     });
     this.componentRegistry = componentRegistry;
   };
 
-  this._initializeCommandRegistry = function() {
-    var commands = this.config.commands || defaultCommands;
-
+  this._initializeCommandRegistry = function(commands) {
     var commandRegistry = new Registry();
     _.each(commands, function(CommandClass) {
       var cmd = new CommandClass(this);
@@ -97,19 +92,12 @@ Controller.Prototype = function() {
     return this.logger;
   };
 
-  // Component API
-  // ----------------
-
-  this.getComponent = function(name) {
-    return this.componentRegistry.get(name);
-  };
-
   this.getClipboard = function() {
     return this.clipboard;
   };
 
   this.getDocument = function() {
-    return this.doc;
+    return this.props.doc;
   };
 
   // If no name is provided, the focused surface is returned
@@ -118,7 +106,7 @@ Controller.Prototype = function() {
       return this.surfaces[name];
     } else {
       // console.warn('Deprecated: Use getFocusedSurface. Always provide a name for getSurface otherwise.');
-      return this.focusedSurface || this.surfaces[this.config.defaultSurface];
+      return this.focusedSurface || this.surfaces[this.props.config.defaultSurface];
     }
   };
 
@@ -258,10 +246,10 @@ Controller.Prototype = function() {
       logger.info('Saving ...');
       doc.__isSaving = true;
       // Pass saving logic to the user defined callback if available
-      if (this.config.onSave) {
+      if (this.props.config.onSave) {
         // TODO: calculate changes since last save
         var changes = [];
-        this.config.onSave(doc, changes, function(err) {
+        this.props.config.onSave(doc, changes, function(err) {
           doc.__isSaving = false;
           if (err) {
             logger.error(err.message || err.toString());
@@ -282,8 +270,8 @@ Controller.Prototype = function() {
     this.surfaces = {};
     this.clipboard = null;
   };
+
 };
 
-OO.inherit(Controller, EventEmitter);
-
+OO.inherit(Controller, Component);
 module.exports = Controller;
