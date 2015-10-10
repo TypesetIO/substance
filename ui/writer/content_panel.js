@@ -5,7 +5,6 @@ var _ = require('../../basics/helpers');
 var OO = require('../../basics/oo');
 var Component = require('../component');
 var $$ = Component.$$;
-
 var Panel = require("./panel");
 var Scrollbar = require("./scrollbar");
 
@@ -52,7 +51,6 @@ ContentPanel.Prototype = function() {
   };
 
   this.renderContentEditor = function() {
-    var ctrl = this.getController();
     var doc = this.props.doc;
     var containerNode = doc.get(this.props.containerId);
     var componentRegistry = this.context.componentRegistry;
@@ -91,7 +89,6 @@ ContentPanel.Prototype = function() {
     var scrollTop = this.getScrollPosition();
 
     var scrollBottom = scrollTop + panelHeight;
-
     var regularScanline = scrollTop;
     var smartScanline = 2 * scrollBottom - contentHeight;
     var scanline = Math.max(regularScanline, smartScanline);

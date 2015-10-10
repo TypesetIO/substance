@@ -42,6 +42,15 @@ function Controller() {
 
 Controller.Prototype = function() {
 
+  this.getChildContext = function() {
+    return {
+      config: this.props.config,
+      controller: this,
+      componentRegistry: this.componentRegistry,
+      toolManager: this.toolManager
+    };
+  };
+
   this.getToolManager = function() {
     return this.toolManager;
   };
