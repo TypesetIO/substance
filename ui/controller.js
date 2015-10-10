@@ -134,8 +134,9 @@ Controller.Prototype = function() {
   };
 
   this.registerSurface = function(surface) {
+
     surface.connect(this, {
-      'selection:changed': this.onSelectionChanged
+      'selection:changed': this._onSelectionChanged
     });
     this.surfaces[surface.getName()] = surface;
   };
@@ -209,7 +210,7 @@ Controller.Prototype = function() {
     logger.info('Unsaved changes');
   };
 
-  this.onSelectionChanged = function(sel, surface) {
+  this._onSelectionChanged = function(sel, surface) {
     // Skip if the selection has not really changed
     // if (sel.equals(this.__prevSelection)) {
     //   return;

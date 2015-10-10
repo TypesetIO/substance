@@ -14,8 +14,7 @@ var Registry = require('../basics/registry');
 function Surface() {
   Component.apply(this, arguments);
 
-  // Takes the controller, either via props or dependency injection
-  var controller = this.props.controller || this.context.controller;
+  var controller = this.context.controller;
   var doc = this.props.doc;
   
   if (!controller) {
