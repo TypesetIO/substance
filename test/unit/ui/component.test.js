@@ -422,3 +422,37 @@ QUnit.test("Cascaded updates of HTML attributes.", function(assert) {
   comp.setProps({ childCss: { "width": 50 } });
   assert.equal(comp.refs.child.el.style.width, "50px", "Child component should have updated css style.");
 });
+
+
+QUnit.test("Should wipe a referenced component when class changes", function(assert) {
+  var ComponentA = TestComponent.extend({
+    render: function() {
+      return $$('div').addClass('component-a');
+    }
+  });
+
+  var ComponentB = TestComponent.extend({
+    render: function() {
+      return $$('div').addClass('component-b');
+    }
+  });
+
+  var MainComponent = TestComponent.extend({
+    render: function() {
+      var el = $$('div').addClass('context');
+      var ContextClass;
+      if (this.props.context ==='A') {
+        ContextClass = ComponentA;
+      } else {
+        ContextClass = ComponentB;
+      }
+      el.append($$(ContextClass).ref('context'));
+      return el;
+    }
+  });
+
+  var comp = Component.mount($$(MainComponent, {context: 'A'}), $('#qunit-fixture'));
+  assert.ok(comp.refs.context instanceof ComponentA, 'Context should be of instance ComponentA');
+  comp.setProps({context: 'B'});
+  assert.ok(comp.refs.context instanceof ComponentB, 'Context should be of instance ComponentB');
+});
