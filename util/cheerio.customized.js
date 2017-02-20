@@ -27,7 +27,7 @@ if (!$) {
     cheerio.prototype.removeProp = cheerio.prototype.removeAttr;
     cheerio.prototype.on = function() {};
     cheerio.prototype.off = function() {};
-    $ = cheerio.load('', {decodeEntities: false});
+    $ = cheerio.load('', {decodeEntities: false, recognizeCDATA: true});
 
     $._createElement = function(tagName, root) {
       return _createElement({
