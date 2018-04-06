@@ -8,9 +8,9 @@ var inNodeJS = false;
 var inBrowser = ( typeof window !== 'undefined' );
 
 if (inBrowser) {
-  var process = windows.process;
+  var process = window.process;
   if (typeof process !== 'undefined') {
-    inElectron = true
+    inElectron = true;
   } 
   // else {
   //   inNodeJS = true
