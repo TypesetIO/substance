@@ -97,12 +97,22 @@ Node.Prototype = function() {
 
     @returns {Object} JSON representation of node.
    */
-  this.toJSON = function() {
+  this.toJSON = function () {
     var data = {
       type: this.constructor.static.name
     };
-    each(this.constructor.static.schema, function(prop, name) {
-      data[prop.name] = this[name];
+    each(this.constructor.static.schema, function (prop, name) {
+      let canBeSkipped = false;
+      if (prop.optional) {
+        const defaultVal = prop.default;
+        const currentVal = this[name];
+        if (defaultVal === currentVal) {
+          canBeSkipped = true;
+        }
+      }
+      if (!canBeSkipped) {
+        data[prop.name] = this[name];
+      }
     }.bind(this));
     return data;
   };
