@@ -4,7 +4,6 @@
 // which is not there in a real browser env
 
 var inElectron = false;
-var inNodeJS = false;
 var inBrowser = ( typeof window !== 'undefined' );
 
 if (inBrowser) {
@@ -12,9 +11,6 @@ if (inBrowser) {
   if (typeof process !== 'undefined') {
     inElectron = true;
   } 
-  // else {
-  //   inNodeJS = true
-  // }
 }
 
 var returnVal = inBrowser || inElectron;
