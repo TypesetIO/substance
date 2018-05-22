@@ -9,7 +9,7 @@
   "engines": {
     "node": ">=0.11"
   },
-  "main": "index.js",
+  "main": "lib/substance.js",
   "scripts": {
     "test": "gulp test",
     "coverage": "gulp coverage",
@@ -51,6 +51,8 @@
     "map-stream": "0.0.6",
     "node-sass": "3.7.0",
     "promise": "7.1.1",
+    "rollup": "^0.59.2",
+    "rollup-plugin-multi-entry": "^2.0.2",
     "tap-spec": "4.1.1",
     "tape": "4.5.1",
     "through2": "2.0.1",
