@@ -10,8 +10,9 @@ export default {
   ],
   plugins: [multiEntry()],
   output: {
-    format: 'cjs',
-    file: 'lib/substance.js',
-    format: 'cjs'
+    name: 'substance',
+    format: 'umd',
+    // file: 'lib/substance.js',
+    file: 'substance.js',
   },
 };
