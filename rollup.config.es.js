@@ -8,8 +8,8 @@ export default {
   input: './index.es.js',
   output: {
     name: 'substance',
-    format: 'cjs',
-    file: 'lib/substance.js',
+    format: 'es',
+    file: 'lib/substance.es.js',
   },
   plugins: [
     sass(),
