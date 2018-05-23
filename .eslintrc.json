@@ -1,0 +1,43 @@
+{
+  "parser": "babel-eslint",
+  "extends": [
+    "airbnb-base"
+  ],
+  "root": true,
+  "rules": {
+    "no-else-return": 0,
+    "func-names": 0,
+    "no-fallthrough": 0,
+    "no-underscore-dangle": [
+      "error",
+      {
+        "allowAfterThis": true
+      }
+    ],
+    "class-methods-use-this": 0,
+    "no-trailing-spaces": "off",
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": [
+          "webpack-config/**/*.js",
+          "**/*.test.js",
+          "**/*.server-test.js"
+        ]
+      }
+    ],
+    "array-callback-return": "warn",
+    "no-plusplus": "off",
+    "no-extra-boolean-cast": "off",
+    "prefer-destructuring": 1,
+    "no-prototype-builtins": "off",
+    "import/prefer-default-export": "off",
+    "no-param-reassign": "off"
+  },
+  "env": {
+    "es6": true,
+    "browser": true,
+    "node": true,
+    "mocha": true
+  }
+}
