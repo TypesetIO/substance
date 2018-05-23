@@ -206,24 +206,6 @@ Selection.fromJSON = function(json) {
   if (!json) {
     return Selection.nullSelection;
   }
-  var type = json.type;
-  switch(type) {
-    case 'property':
-      var PropertySelection = require('./PropertySelection');
-      return PropertySelection.fromJSON(json);
-    case 'container':
-      var ContainerSelection = require('./ContainerSelection');
-      return ContainerSelection.fromJSON(json);
-    case 'node':
-      var NodeSelection = require('./NodeSelection');
-      return NodeSelection.fromJSON(json);
-    case 'custom':
-      var CustomSelection = require('./CustomSelection');
-      return CustomSelection.fromJSON(json);
-    default:
-      // console.error('Selection.fromJSON(): unsupported selection data', json);
-      return Selection.nullSelection;
-  }
 };
 
 Selection.create = function() {

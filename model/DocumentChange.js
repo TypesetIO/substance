@@ -1,17 +1,18 @@
-'use strict';
+import { selectionFromJSON } from './selectionHelpers';
+import isEqual from "lodash/isEqual";
+import isObject from "lodash/isObject";
+import isArray from "lodash/isArray";
+import map from "lodash/map";
+import forEach from "lodash/forEach";
+import clone from "lodash/clone";
+import cloneDeep from "lodash/cloneDeep";
+import oo from "../util/oo";
+import uuid from "../util/uuid";
+import OperationSerializer from "./data/OperationSerializer";
+import ObjectOperation from "./data/ObjectOperation";
 
-var isEqual = require('lodash/isEqual');
-var isObject = require('lodash/isObject');
-var isArray = require('lodash/isArray');
-var map = require('lodash/map');
-var forEach = require('lodash/forEach');
-var clone = require('lodash/clone');
-var cloneDeep = require('lodash/cloneDeep');
-var oo = require('../util/oo');
-var uuid = require('../util/uuid');
-var OperationSerializer = require('./data/OperationSerializer');
-var ObjectOperation = require('./data/ObjectOperation');
-var Selection = require('./Selection');
+const { initClass } = oo;
+const { fromJSON, transform } = ObjectOperation;
 
 /*
 
@@ -36,7 +37,7 @@ var Selection = require('./Selection');
 */
 function DocumentChange(ops, before, after) {
   if (arguments.length === 1 && isObject(arguments[0])) {
-    var data = arguments[0];
+    const data = arguments[0];
     // a unique id for the change
     this.sha = data.sha;
     // when the change has been applied
@@ -66,26 +67,26 @@ function DocumentChange(ops, before, after) {
   this.deleted = null;
 }
 
-DocumentChange.Prototype = function() {
-
+DocumentChange.Prototype = function () {
   /*
     Extract aggregated information about which nodes and properties have been affected.
     This gets called by Document after applying the change.
   */
-  this._extractInformation = function(doc) {
-    var ops = this.ops;
-    var created = {};
-    var deleted = {};
-    var updated = {};
-    var affectedContainerAnnos = [];
+  this._extractInformation = function (doc) {
+    const ops = this.ops;
+    const created = {};
+    const deleted = {};
+    const updated = {};
+    const affectedContainerAnnos = [];
 
     // TODO: we will introduce a special operation type for coordinates
     function _checkAnnotation(op) {
-      var node = op.val;
-      var path, propName;
+      let node = op.val;
+      let path, 
+        propName;
       switch (op.type) {
-        case "create":
-        case "delete":
+        case 'create':
+        case 'delete':
           // HACK: detecting annotation changes in an opportunistic way
           if (node.hasOwnProperty('startOffset')) {
             path = node.path || node.startPath;
@@ -96,8 +97,8 @@ DocumentChange.Prototype = function() {
             updated[path] = true;
           }
           break;
-        case "update":
-        case "set":
+        case 'update':
+        case 'set':
           // HACK: detecting annotation changes in an opportunistic way
           node = doc.get(op.path[0]);
           if (node) {
@@ -120,29 +121,29 @@ DocumentChange.Prototype = function() {
       }
     }
 
-    for (var i = 0; i < ops.length; i++) {
-      var op = ops[i];
-      if (op.type === "create") {
+    for (let i = 0; i < ops.length; i++) {
+      const op = ops[i];
+      if (op.type === 'create') {
         created[op.val.id] = op.val;
         delete deleted[op.val.id];
       }
-      if (op.type === "delete") {
+      if (op.type === 'delete') {
         delete created[op.val.id];
         deleted[op.val.id] = op.val;
       }
-      if (op.type === "set" || op.type === "update") {
+      if (op.type === 'set' || op.type === 'update') {
         // The old as well the new one is affected
         updated[op.path] = true;
       }
       _checkAnnotation(op);
     }
 
-    affectedContainerAnnos.forEach(function(anno) {
-      var container = doc.get(anno.containerId, 'strict');
-      var startPos = container.getPosition(anno.startPath[0]);
-      var endPos = container.getPosition(anno.endPath[0]);
-      for (var pos = startPos; pos <= endPos; pos++) {
-        var node = container.getChildAt(pos);
+    affectedContainerAnnos.forEach((anno) => {
+      const container = doc.get(anno.containerId, 'strict');
+      const startPos = container.getPosition(anno.startPath[0]);
+      const endPos = container.getPosition(anno.endPath[0]);
+      for (let pos = startPos; pos <= endPos; pos++) {
+        const node = container.getChildAt(pos);
         var path;
         if (node.isText()) {
           path = [node.id, 'content'];
@@ -156,9 +157,9 @@ DocumentChange.Prototype = function() {
     });
 
     // remove all deleted nodes from updated
-    if(Object.keys(deleted).length > 0) {
-      forEach(updated, function(_, key) {
-        var nodeId = key.split(',')[0];
+    if (Object.keys(deleted).length > 0) {
+      forEach(updated, (_, key) => {
+        const nodeId = key.split(',')[0];
         if (deleted[nodeId]) {
           delete updated[key];
         }
@@ -170,17 +171,17 @@ DocumentChange.Prototype = function() {
     this.updated = updated;
   };
 
-  this.invert = function() {
+  this.invert = function () {
     // shallow cloning this
-    var copy = this.toJSON();
+    const copy = this.toJSON();
     copy.ops = [];
     // swapping before and after
-    var tmp = copy.before;
+    const tmp = copy.before;
     copy.before = copy.after;
     copy.after = tmp;
-    var inverted = DocumentChange.fromJSON(copy);
-    var ops = [];
-    for (var i = this.ops.length - 1; i >= 0; i--) {
+    const inverted = DocumentChange.fromJSON(copy);
+    const ops = [];
+    for (let i = this.ops.length - 1; i >= 0; i--) {
       ops.push(this.ops[i].invert());
     }
     inverted.ops = ops;
@@ -190,7 +191,7 @@ DocumentChange.Prototype = function() {
   // Inspection API used by DocumentChange listeners
   // ===============================================
 
-  this.isAffected = function(path) {
+  this.isAffected = function (path) {
     return this.updated[path];
   };
 
@@ -201,28 +202,24 @@ DocumentChange.Prototype = function() {
     for application data in 'after' and 'before'
   */
 
-  this.serialize = function() {
-    var opSerializer = new OperationSerializer();
-    var data = this.toJSON();
-    data.ops = this.ops.map(function(op) {
-      return opSerializer.serialize(op);
-    });
+  this.serialize = function () {
+    const opSerializer = new OperationSerializer();
+    const data = this.toJSON();
+    data.ops = this.ops.map(op => opSerializer.serialize(op));
     return JSON.stringify(data);
   };
 
-  this.clone = function() {
+  this.clone = function () {
     return DocumentChange.fromJSON(this.toJSON());
   };
 
-  this.toJSON = function() {
-    var data = {
+  this.toJSON = function () {
+    const data = {
       // to identify this change
       sha: this.sha,
       // before state
       before: clone(this.before),
-      ops: map(this.ops, function(op) {
-        return op.toJSON();
-      }),
+      ops: map(this.ops, op => op.toJSON()),
       info: this.info,
       // after state
       after: clone(this.after),
@@ -233,7 +230,7 @@ DocumentChange.Prototype = function() {
     data.after.selection = undefined;
     data.before.selection = undefined;
 
-    var sel = this.before.selection;
+    let sel = this.before.selection;
     if (sel && sel._isSelection) {
       data.before.selection = sel.toJSON();
     }
@@ -245,31 +242,27 @@ DocumentChange.Prototype = function() {
   };
 };
 
-oo.initClass(DocumentChange);
+initClass(DocumentChange);
 
-DocumentChange.deserialize = function(str) {
-  var opSerializer = new OperationSerializer();
-  var data = JSON.parse(str);
-  data.ops = data.ops.map(function(opData) {
-    return opSerializer.deserialize(opData);
-  });
+DocumentChange.deserialize = function (str) {
+  const opSerializer = new OperationSerializer();
+  const data = JSON.parse(str);
+  data.ops = data.ops.map(opData => opSerializer.deserialize(opData));
   if (data.before.selection) {
-    data.before.selection = Selection.fromJSON(data.before.selection);
+    data.before.selection = selectionFromJSON(data.before.selection);
   }
   if (data.after.selection) {
-    data.after.selection = Selection.fromJSON(data.after.selection);
+    data.after.selection = selectionFromJSON(data.after.selection);
   }
   return new DocumentChange(data);
 };
 
-DocumentChange.fromJSON = function(data) {
+DocumentChange.fromJSON = function (data) {
   // Don't write to original object on deserialization
-  var change = cloneDeep(data);
-  change.ops = data.ops.map(function(opData) {
-    return ObjectOperation.fromJSON(opData);
-  });
-  change.before.selection = Selection.fromJSON(data.before.selection);
-  change.after.selection = Selection.fromJSON(data.after.selection);
+  const change = cloneDeep(data);
+  change.ops = data.ops.map(opData => fromJSON(opData));
+  change.before.selection = selectionFromJSON(data.before.selection);
+  change.after.selection = selectionFromJSON(data.after.selection);
   return new DocumentChange(change);
 };
 
@@ -282,18 +275,16 @@ DocumentChange.fromJSON = function(data) {
   v_n          v_n+1
      \ B - A' /
 */
-DocumentChange.transformInplace = function(A, B) {
+DocumentChange.transformInplace = function (A, B) {
   _transformInplaceBatch(A, B);
 };
 
 function _transformInplaceSingle(a, b) {
-  for (var i = 0; i < a.ops.length; i++) {
-    var a_op = a.ops[i];
-    for (var j = 0; j < b.ops.length; j++) {
-      var b_op = b.ops[j];
-      // ATTENTION: order of arguments is important.
-      // First argument is the dominant one, i.e. it is treated as if it was applied before
-      ObjectOperation.transform(a_op, b_op, {inplace: true});
+  for (let i = 0; i < a.ops.length; i++) {
+    const a_op = a.ops[i];
+    for (let j = 0; j < b.ops.length; j++) {
+      const b_op = b.ops[j];
+      transform(a_op, b_op, { inplace: true });
     }
   }
   if (a.before) {
@@ -317,24 +308,24 @@ function _transformInplaceBatch(A, B) {
   if (!isArray(B)) {
     B = [B];
   }
-  for (var i = 0; i < A.length; i++) {
-    var a = A[i];
-    for (var j = 0; j < B.length; j++) {
-      var b = B[j];
-      _transformInplaceSingle(a,b);
+  for (let i = 0; i < A.length; i++) {
+    const a = A[i];
+    for (let j = 0; j < B.length; j++) {
+      const b = B[j];
+      _transformInplaceSingle(a, b);
     }
   }
 }
 
 function _transformSelectionInplace(sel, a) {
-  if (!sel || (!sel.isPropertySelection() && !sel.isContainerSelection()) ) {
+  if (!sel || (!sel.isPropertySelection() && !sel.isContainerSelection())) {
     return false;
   }
-  var ops = a.ops;
-  var hasChanged = false;
-  var isCollapsed = sel.isCollapsed();
-  for(var i=0; i<ops.length; i++) {
-    var op = ops[i];
+  const ops = a.ops;
+  let hasChanged = false;
+  const isCollapsed = sel.isCollapsed();
+  for (let i = 0; i < ops.length; i++) {
+    const op = ops[i];
     hasChanged |= _transformCoordinateInplace(sel.start, op);
     if (!isCollapsed) {
       hasChanged |= _transformCoordinateInplace(sel.end, op);
@@ -348,9 +339,9 @@ function _transformSelectionInplace(sel, a) {
   return hasChanged;
 }
 
-DocumentChange.transformSelection = function(sel, a) {
-  var newSel = sel.clone();
-  var hasChanged = _transformSelectionInplace(newSel, a);
+DocumentChange.transformSelection = function (sel, a) {
+  const newSel = sel.clone();
+  const hasChanged = _transformSelectionInplace(newSel, a);
   if (hasChanged) {
     return newSel;
   } else {
@@ -360,10 +351,10 @@ DocumentChange.transformSelection = function(sel, a) {
 
 function _transformCoordinateInplace(coor, op) {
   if (!isEqual(op.path, coor.path)) return false;
-  var hasChanged = false;
+  let hasChanged = false;
   if (op.type === 'update' && op.propertyType === 'string') {
-    var diff = op.diff;
-    var newOffset;
+    const diff = op.diff;
+    let newOffset;
     if (diff.isInsert() && diff.pos <= coor.offset) {
       newOffset = coor.offset + diff.str.length;
       // console.log('Transforming coordinate after inserting %s chars:', diff.str.length, coor.toString(), '->', newOffset);
@@ -379,4 +370,4 @@ function _transformCoordinateInplace(coor, op) {
   return hasChanged;
 }
 
-module.exports = DocumentChange;
+export default DocumentChange;

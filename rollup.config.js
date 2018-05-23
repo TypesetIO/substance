@@ -3,6 +3,7 @@ import commonjs from 'rollup-plugin-commonjs';
 import json from 'rollup-plugin-json';
 import resolve from 'rollup-plugin-node-resolve';
 import sass from 'rollup-plugin-sass';
+import builtins from 'rollup-plugin-node-builtins';
 
 export default {
   input: './index.es.js',
@@ -12,13 +13,14 @@ export default {
     file: 'lib/substance.js',
   },
   plugins: [
+    builtins(),
     sass(),
     json({
       preferConst: true,
       include: 'node_modules/**',
     }),
     resolve({
-      preferBuiltins: true,
+      preferBuiltins: false,
       extensions: ['.mjs', '.js', '.jsx', '.json']
     }),
     commonjs(),
