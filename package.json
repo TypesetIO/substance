@@ -29,6 +29,9 @@
     "lodash": "^4.17.10"
   },
   "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^8.2.3",
+    "babel-preset-env": "^1.7.0",
     "browserify": "substance/node-browserify#d3caeb6dcdaa97a258d099c7231a57f0f60ec876",
     "commonmark": "0.22.1",
     "dox": "substance/dox#b537b882ca0b2ffd512ae94f5d19909cce3ed911",
